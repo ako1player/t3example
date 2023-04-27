@@ -7,11 +7,23 @@ import { api } from "~/utils/api";
 import type { RouterOutputs } from "~/utils/api";
 import Image from "next/image";
 import { LoadingPage } from "~/components/loading";
+import { useState } from "react";
 
 dayjs.extend(relativeTime);
 
 const CreatePostWizard = () =>{
   const {user} = useUser();
+
+  const [input, setInput] = useState("");
+
+  const ctx = api.useContext();
+
+  const {mutate, isLoading: isPosting} = api.posts.create.useMutation({
+    onSuccess: () =>{
+      setInput("");
+      void ctx.posts.getAll.invalidate();
+    }
+  });
 
   console.log(user)
 
@@ -19,7 +31,15 @@ const CreatePostWizard = () =>{
 
   return <div className="flex w-full gap-3">
     <Image src={user.profileImageUrl} alt="Profile Name" className="rounded-full w-14 h-14" width={56} height={56}/>
-    <input placeholder="type some emojis!" className="bg-transparent outline-none grow" />
+    <input 
+      placeholder="type some emojis!" 
+      className="bg-transparent outline-none grow"  
+      value={input}
+      type="text"
+      onChange={(e) => setInput(e.target.value)}
+      disabled={isPosting}
+    />
+    <button onClick={()=> mutate({content: input})}>Post</button>
   </div>
 }
 
@@ -28,14 +48,14 @@ type PostWithUser = RouterOutputs["posts"]["getAll"][number];
 const PostView = (props: PostWithUser) =>{
   const {post, author} = props;
   return (
-    <div key={post.id} className="flex p-4 border-b border-slate-400">
+    <div key={post.id} className="flex gap-3 p-4 border-b border-slate-400">
       <Image src={author.profileImageUrl} alt={`@${author.username}'s Profile Picture`} className="rounded-full w-14 h-14" width={56} height={56} />
       <div className="flex flex-col">
         <div className="flex gap-1 font-bold text-slate-300">
           <span>{`@${author.username} `}</span>
           <span className="font-thin">{` · ${dayjs(post.createdAt).fromNow()}`}</span>
         </div>
-        <span>{post.content}</span>
+        <span className="text-2xl">{post.content}</span>
       </div>
     </div>
   )
@@ -48,7 +68,7 @@ const Feed = () =>{
   if(!data) return <div>Something went wrong</div>
   return (
     <div className="flex flex-col">
-    {[...data,...data].map((fullPost) =>(
+    {data.map((fullPost) =>(
       <PostView {...fullPost} key={fullPost.post.id} />
     ))}
   </div>

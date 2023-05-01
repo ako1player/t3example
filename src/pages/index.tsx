@@ -11,6 +11,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 import { PageLayout } from "~/components/layout";
+import { PostView } from "~/components/postview";
 
 dayjs.extend(relativeTime);
 
@@ -61,24 +62,6 @@ const CreatePostWizard = () =>{
     {input !== "" && !isPosting && (<button onClick={()=> mutate({content: input})}>Post</button>)}
     {isPosting && (<div className="flex items-center justify-center"><LoadingSpinner size={20} /></div>)}
   </div>
-}
-
-type PostWithUser = RouterOutputs["posts"]["getAll"][number];
-
-const PostView = (props: PostWithUser) =>{
-  const {post, author} = props;
-  return (
-    <div key={post.id} className="flex gap-3 p-4 border-b border-slate-400">
-      <Image src={author.profileImageUrl} alt={`@${author.username}'s Profile Picture`} className="rounded-full w-14 h-14" width={56} height={56} />
-      <div className="flex flex-col">
-        <div className="flex gap-1 font-bold text-slate-300">
-          <Link href={`/@${author.username}`}><span>{`@${author.username} `}</span></Link>
-          <Link href={`/post/${post.id}`}><span className="font-thin">{` · ${dayjs(post.createdAt).fromNow()}`}</span></Link>
-        </div>
-        <span className="text-2xl">{post.content}</span>
-      </div>
-    </div>
-  )
 }
 
 const Feed = () =>{
